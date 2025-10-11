@@ -321,6 +321,16 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    #[inline]
+    pub unsafe fn set_len(self: &mut Self, len: usize) {
+        (*self).len = len;
+    }
+
+    #[inline]
+    pub unsafe fn set_cap(self: &mut Self, cap: usize) {
+        (*self).capacity = cap;
+    }
+
     pub unsafe fn from_utf8_unchecked(vector: Vec<u8>) -> Self {
         let mut inst: Self = Self::with_capacity();
         for x in vector {
@@ -755,14 +765,18 @@ impl<const N: usize> Yangon<N> {
 macro_rules! yangon {
     ($($str: expr)?) => {{
         let mut inst: Yangon<10240> = Yangon::with_capacity();
+        let mut idx: usize = 0;
         $(
             for &x in $str.as_bytes() {
                 unsafe {
-                    *inst.list[inst.len].as_mut_ptr() = x;
+                    *inst.list[idx].as_mut_ptr() = x;
                 }
-                inst.len += 1;
+                idx += 1;
             }
         )?
+        unsafe {
+            inst.set_len(idx);
+        }
         inst
     }};
 }
