@@ -1,0 +1,27 @@
+[package]
+name = "yangon"
+version = "0.0.2"
+edition = "2021"
+authors = ["ruster sai <rustersai@gmail.com>"]
+description = "Stack-based String-like cat"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rustersai/yangon"
+homepage = "https://github.com/rustersai/yangon"
+readme = "README.md"
+categories = ["data-structures", "text-processing"]
+
+[dependencies]
+
+
+[features]
+default = []
+
+[dev-dependencies]
+
+
+[profile.release]
+opt-level = 3
+lto = true         
+codegen-units = 1 
+panic = "abort"    
+strip = true
