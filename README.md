@@ -151,7 +151,6 @@ let string: String = s.to_string();
 Yangon is ideal for:
 
 - **Performance-critical code** where heap allocation overhead is unacceptable
-- **Embedded systems** with limited or no heap allocation
 - **Network protocols** requiring fixed-size string buffers
 - **Data transfer/storage** with known maximum string lengths
 - **Real-time applications** requiring predictable performance
