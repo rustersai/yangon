@@ -2,6 +2,11 @@
 
 A high-performance, stack-allocated string type for Rust with fixed capacity and zero heap allocations.
 
+[![Crates.io](https://img.shields.io/crates/v/yangon.svg)](https://crates.io/crates/yangon)
+[![Docs.rs](https://docs.rs/yangon/badge.svg)](https://docs.rs/yangon)
+[![License](https://img.shields.io/crates/l/yangon)](https://github.com/rustersai/yangon/blob/main/LICENSE)
+
+
 ## Overview
 
 Yangon is a production-ready string library that provides a stack-allocated alternative to `String`. By using fixed-capacity storage and const generics, Yangon eliminates heap allocations for performance-critical applications while maintaining a familiar String-like API.
