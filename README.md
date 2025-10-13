@@ -241,7 +241,7 @@ let s = yangon!("Hello, World!");
 
 ## Documentation
 
-Full API documentation is coming soon to docs.rs.
+Full API documentation is available on [docs.rs](https://docs.rs/yangon).
 
 ## License
 
