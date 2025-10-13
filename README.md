@@ -24,7 +24,7 @@ Add Yangon to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-yangon = "0.0.6"
+yangon = "0.0.8"
 ```
 
 ## Quick Start
