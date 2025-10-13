@@ -247,10 +247,6 @@ Full API documentation is available on [docs.rs](https://docs.rs/yangon).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributing
-
-This is a stable, production-ready project. While it's not actively seeking contributors, bug reports and suggestions are welcome via GitHub issues.
-
 ## About the Name
 
 Yangon is named after the capital city of Myanmar. The name reflects the project's foundation: solid, reliable, and built for real-world use.
