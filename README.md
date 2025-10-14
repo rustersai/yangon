@@ -3,7 +3,7 @@
 A high-performance, stack-allocated string type for Rust with fixed capacity and zero heap allocations.
 
 [![Crates.io](https://img.shields.io/crates/v/yangon.svg)](https://crates.io/crates/yangon)
-[![Docs.rs](https://docs.rs/yangon/badge.svg)](https://docs.rs/yangon)
+
 [![License](https://img.shields.io/crates/l/yangon?style=flat)](https://github.com/rustersai/yangon/blob/main/LICENSE)
 
 ## Overview
