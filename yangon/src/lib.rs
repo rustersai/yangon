@@ -9,20 +9,20 @@ use std::{
     str::{self, from_utf8_unchecked},
 };
 
-#[allow(non_camel_case_types)]
+
 pub trait yGeneric<'y, const C: usize> {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
         'y: 'b;
 }
 
-#[allow(non_camel_case_types)]
+
 pub trait yTrait {
     type Ygn;
     fn to_yangon(self: &Self) -> Self::Ygn;
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yPattern<'y, const C: usize> {
     Slice(&'y str),
     Char(char),
@@ -30,13 +30,13 @@ pub enum yPattern<'y, const C: usize> {
     Closure(fn(char) -> bool),
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yError {
     FromUtf8Error,
     CapacityOverflow,
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yCow<'c, X> {
     Borrowed(&'c str),
     Owned(X),
@@ -49,7 +49,7 @@ pub struct Yangon<const N: usize = 10240> {
     capacity: usize,
 }
 
-#[allow(warnings)]
+
 impl<const N: usize> Yangon<N> {
     pub fn push_str(self: &mut Self, slice: &str) -> Result<(), yError> {
         let mut len: usize = (*self).len;
