@@ -25,3 +25,9 @@ lto = true
 codegen-units = 1 
 panic = "abort"    
 strip = true
+
+
+
+[workspace]
+members = ["yangon"]
+resolver = "2"
