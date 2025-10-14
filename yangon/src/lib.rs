@@ -1,6 +1,7 @@
 use std::{
     cmp::PartialEq,
     convert::AsRef,
+    slice::from_raw_parts,
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult, Write},
     mem::{MaybeUninit, transmute},
     ops::Deref,
@@ -9,20 +10,20 @@ use std::{
     str::{self, from_utf8_unchecked},
 };
 
-
+#[allow(non_camel_case_types)]
 pub trait yGeneric<'y, const C: usize> {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
         'y: 'b;
 }
 
-
+#[allow(non_camel_case_types)]
 pub trait yTrait {
     type Ygn;
     fn to_yangon(self: &Self) -> Self::Ygn;
 }
 
-
+#[allow(non_camel_case_types)]
 pub enum yPattern<'y, const C: usize> {
     Slice(&'y str),
     Char(char),
@@ -30,13 +31,13 @@ pub enum yPattern<'y, const C: usize> {
     Closure(fn(char) -> bool),
 }
 
-
+#[allow(non_camel_case_types)]
 pub enum yError {
     FromUtf8Error,
     CapacityOverflow,
 }
 
-
+#[allow(non_camel_case_types)]
 pub enum yCow<'c, X> {
     Borrowed(&'c str),
     Owned(X),
@@ -50,6 +51,8 @@ pub struct Yangon<const N: usize = 10240> {
 }
 
 
+
+#[allow(warnings)]
 impl<const N: usize> Yangon<N> {
     pub fn push_str(self: &mut Self, slice: &str) -> Result<(), yError> {
         let mut len: usize = (*self).len;
@@ -660,9 +663,7 @@ impl<const N: usize> Yangon<N> {
                 }
                 let mut inst: Yangon<N> = Self::with_capacity();
                 let upg_byt: &[u8] = upg.as_bytes();
-                let list: &[u8] = unsafe {
-                    &*transmute::<(*const u8, usize), *const [u8]>(((*self).as_ptr(), len))
-                };
+                let list: &[u8] = unsafe { from_raw_parts((*self).as_ptr(), len) };
                 let mut srt_idx: usize = 0;
                 let mut end_idx: usize = 1;
                 let ist_ptr: *mut u8 = inst.list[0].as_mut_ptr();
@@ -765,6 +766,7 @@ impl<const N: usize> Yangon<N> {
         Self::with_capacity()
     }
 }
+
 
 #[macro_export]
 macro_rules! yangon {
