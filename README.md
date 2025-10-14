@@ -229,10 +229,6 @@ let s = yangon!("Hello, World!");
 // Note: Only accepts 0 or 1 string literal
 ```
 
-## Documentation
-
-Full API documentation is coming soon to docs.rs.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
