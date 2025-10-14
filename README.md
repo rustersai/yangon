@@ -6,14 +6,11 @@ A high-performance, stack-allocated string type for Rust with fixed capacity and
 [![Docs.rs](https://docs.rs/yangon/badge.svg)](https://docs.rs/yangon)
 [![License](https://img.shields.io/crates/l/yangon?style=flat)](https://github.com/rustersai/yangon/blob/main/LICENSE)
 
-
-
 ## Overview
 
-Yangon is a string library that provides a stack-allocated alternative to `String`. By using fixed-capacity storage and const generics, Yangon eliminates heap allocations for performance-critical applications while maintaining a familiar String-like API.
+Yangon is string library that provides a stack-allocated alternative to `String`. By using fixed-capacity storage and const generics, Yangon eliminates heap allocations for performance-critical applications.
 
-**Performance Highlights:**
--  **25x faster** than `std::string::String` for `push_str` operations
+**Highlights:**
 -  Zero heap allocations - all data stored on the stack
 -  Configurable capacity via const generics
 -  Full UTF-8 validation and support
@@ -24,7 +21,7 @@ Add Yangon to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-yangon = "0.0.8"
+yangon = "0.0.3"
 ```
 
 ## Quick Start
@@ -161,21 +158,16 @@ Yangon is ideal for:
 - **Data transfer/storage** with known maximum string lengths
 - **Real-time applications** requiring predictable performance
 
-### Real-World Example
-
-Currently used in production for a Facebook Reel downloader application, handling URL manipulation and data processing with consistent performance.
-
 ## Performance Considerations
 
 ### When Yangon Excels
--  `push_str` operations: **~25x faster** than `String`
+-  `push_str` operations: **~15x faster** than `String`
 -  `push` operations: Significantly faster
 -  Character-by-character building: Minimal allocation overhead
 -  Short to medium strings fitting in capacity
 
 ### Performance Notes
 -  `replace` function is slower than `String::replace` - avoid in hot paths when possible
--  Fixed capacity means capacity overflow returns `Err(yError::CapacityOverflow)`
 -  Best for data transfer and storage; consider `String` for highly dynamic string manipulation
 
 ## Safety
@@ -184,11 +176,9 @@ Yangon uses `unsafe` internally for performance-critical operations but maintain
 
 -  **UTF-8 validation** on all public APIs (except `_unchecked` variants)
 -  **Bounds checking** prevents invalid memory access
--  **Production tested** under stress conditions
--  Users must respect capacity limits - overflows return errors or panic
 -  `_unchecked` variants assume valid input for maximum performance
 
-**Responsibility:** Yangon is not as flexible as `String` due to fixed capacity. Use with understanding of your data size requirements.
+
 
 ## API Conversion Reference
 
@@ -241,16 +231,10 @@ let s = yangon!("Hello, World!");
 
 ## Documentation
 
-Full API documentation is available on [docs.rs](https://docs.rs/yangon).
+Full API documentation is coming soon to docs.rs.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## About the Name
-
-Yangon is named after the capital city of Myanmar. The name reflects the project's foundation: solid, reliable, and built for real-world use.
-
 ---
-
-**Note:** Yangon prioritizes performance over flexibility. Understand your string size requirements before choosing Yangon over `String`. When used appropriately, it provides significant performance benefits with zero heap allocation overhead.
