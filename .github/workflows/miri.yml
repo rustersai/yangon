@@ -18,7 +18,9 @@ jobs:
           rustup default nightly
 
       - name: Verify Miri installation
-        run: rustup run nightly cargo miri setup
+        run: cargo +nightly miri setup
+        working-directory: yangon
 
       - name: Run tests under Miri
         run: cargo +nightly miri test
+        working-directory: yangon
