@@ -8,7 +8,7 @@ license = "MIT"
 repository = "https://github.com/rustersai/yangon"
 homepage = "https://github.com/rustersai/yangon"
 readme = "README.md"
-categories =
+categories = ["data-structures", "text-processing"]
 
 [dependencies]
 
@@ -19,7 +19,7 @@ default = []
 
 [profile.release]
 opt-level = 3
-lto = true         
-codegen-units = 1 
-panic = "abort"    
+lto = true
+codegen-units = 1
+panic = "abort"
 strip = true
