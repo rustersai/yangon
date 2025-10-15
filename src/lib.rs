@@ -10,7 +10,6 @@ use std::{
     str::{self, from_utf8_unchecked},
 };
 
-#[cfg(test)]
 #[allow(non_camel_case_types)]
 pub trait yGeneric<'y, const C: usize> {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
@@ -18,14 +17,12 @@ pub trait yGeneric<'y, const C: usize> {
         'y: 'b;
 }
 
-#[cfg(test)]
 #[allow(non_camel_case_types)]
 pub trait yTrait {
     type Ygn;
     fn to_yangon(self: &Self) -> Self::Ygn;
 }
 
-#[cfg(test)]
 #[allow(non_camel_case_types)]
 pub enum yPattern<'y, const C: usize> {
     Slice(&'y str),
@@ -34,21 +31,18 @@ pub enum yPattern<'y, const C: usize> {
     Closure(fn(char) -> bool),
 }
 
-#[cfg(test)]
 #[allow(non_camel_case_types)]
 pub enum yError {
     FromUtf8Error,
     CapacityOverflow,
 }
 
-#[cfg(test)]
 #[allow(non_camel_case_types)]
 pub enum yCow<'c, X> {
     Borrowed(&'c str),
     Owned(X),
 }
 
-#[cfg(test)]
 #[derive(Clone)]
 pub struct Yangon<const N: usize = 10240> {
     list: [MaybeUninit<u8>; N],
@@ -57,7 +51,7 @@ pub struct Yangon<const N: usize = 10240> {
 }
 
 
-#[cfg(test)]
+
 #[allow(warnings)]
 impl<const N: usize> Yangon<N> {
     pub fn push_str(self: &mut Self, slice: &str) -> Result<(), yError> {
@@ -775,7 +769,6 @@ impl<const N: usize> Yangon<N> {
 
 
 #[macro_export]
-#[cfg(test)]
 macro_rules! yangon {
     ($($str: expr)?) => {{
         use std::mem::MaybeUninit;
@@ -797,7 +790,6 @@ macro_rules! yangon {
     }};
 }
 
-#[cfg(test)]
 impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -807,7 +799,6 @@ impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
     }
 }
 
-#[cfg(test)]
 impl<'y, const C: usize> yGeneric<'y, C> for &'y [char; C] {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -817,7 +808,6 @@ impl<'y, const C: usize> yGeneric<'y, C> for &'y [char; C] {
     }
 }
 
-#[cfg(test)]
 impl<'y, const C: usize> yGeneric<'y, C> for char {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -827,7 +817,6 @@ impl<'y, const C: usize> yGeneric<'y, C> for char {
     }
 }
 
-#[cfg(test)]
 impl<'y, const C: usize> yGeneric<'y, C> for &'y str {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -837,7 +826,6 @@ impl<'y, const C: usize> yGeneric<'y, C> for &'y str {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> FromIterator<char> for Yangon<N> {
     fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> Self {
         let mut inst: Self = Self::with_capacity();
@@ -857,7 +845,6 @@ impl<const N: usize> FromIterator<char> for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl yTrait for &str {
     type Ygn = Yangon;
     fn to_yangon(self: &Self) -> Self::Ygn {
@@ -885,7 +872,6 @@ impl yTrait for &str {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> Write for Yangon<N> {
     fn write_str(self: &mut Self, slice: &str) -> FmtResult {
         let len: usize = (*self).len;
@@ -906,7 +892,6 @@ impl<const N: usize> Write for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> PartialEq<&str> for Yangon<N> {
     fn eq(self: &Self, slice: &&str) -> bool {
         unsafe {
@@ -917,7 +902,6 @@ impl<const N: usize> PartialEq<&str> for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> AsRef<str> for Yangon<N> {
     fn as_ref(self: &Self) -> &str {
         unsafe {
@@ -928,7 +912,6 @@ impl<const N: usize> AsRef<str> for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> Deref for Yangon<N> {
     type Target = str;
     fn deref(self: &Self) -> &Self::Target {
@@ -940,7 +923,6 @@ impl<const N: usize> Deref for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
     type Target = str;
     fn deref(self: &Self) -> &Self::Target {
@@ -955,7 +937,6 @@ impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> Display for Yangon<N> {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", unsafe {
@@ -966,7 +947,6 @@ impl<const N: usize> Display for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl<const N: usize> Debug for Yangon<N> {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", unsafe {
@@ -977,14 +957,12 @@ impl<const N: usize> Debug for Yangon<N> {
     }
 }
 
-#[cfg(test)]
 impl Debug for yError {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", "Error")
     }
 }
 
-#[cfg(test)]
 impl Display for yError {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "Error")
