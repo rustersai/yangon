@@ -10,20 +10,20 @@ use std::{
     str::{self, from_utf8_unchecked},
 };
 
-#[allow(non_camel_case_types)]
+
 pub trait yGeneric<'y, const C: usize> {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
         'y: 'b;
 }
 
-#[allow(non_camel_case_types)]
+
 pub trait yTrait {
     type Ygn;
     fn to_yangon(self: &Self) -> Self::Ygn;
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yPattern<'y, const C: usize> {
     Slice(&'y str),
     Char(char),
@@ -31,17 +31,18 @@ pub enum yPattern<'y, const C: usize> {
     Closure(fn(char) -> bool),
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yError {
     FromUtf8Error,
     CapacityOverflow,
 }
 
-#[allow(non_camel_case_types)]
+
 pub enum yCow<'c, X> {
     Borrowed(&'c str),
     Owned(X),
 }
+
 
 #[derive(Clone)]
 pub struct Yangon<const N: usize = 10240> {
@@ -52,14 +53,14 @@ pub struct Yangon<const N: usize = 10240> {
 
 
 
-#[allow(warnings)]
 impl<const N: usize> Yangon<N> {
+    
     pub fn push_str(self: &mut Self, slice: &str) -> Result<(), yError> {
         let mut len: usize = (*self).len;
         if slice.len() + len > (*self).capacity {
             Err(yError::CapacityOverflow)
         } else {
-            let ptr: *mut u8 = (*self).list[0].as_mut_ptr();
+            let mut ptr: *mut u8 = (*self).list.as_mut_ptr() as *mut u8;
             for &x in slice.as_bytes() {
                 unsafe {
                     *ptr.add(len) = x;
@@ -71,9 +72,10 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     pub unsafe fn push_str_unchecked(self: &mut Self, slice: &str) {
         let mut len: usize = (*self).len;
-        let ptr: *mut u8 = (*self).list[0].as_mut_ptr();
+        let ptr: *mut u8 = (*self).list.as_mut_ptr() as *mut u8;
         for &x in slice.as_bytes() {
             *ptr.add(len) = x;
             len += 1;
@@ -81,6 +83,7 @@ impl<const N: usize> Yangon<N> {
         (*self).len = len;
     }
 
+    
     #[inline]
     pub fn with_capacity() -> Self {
         Self {
@@ -90,16 +93,19 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub fn capacity(self: &Self) -> usize {
         (*self).capacity
     }
 
+    
     #[inline]
     pub fn shrink_to_fit(self: &mut Self) {
         (*self).capacity = (*self).len + 1;
     }
 
+    
     #[inline]
     pub fn shrink_to(self: &mut Self, shrk_to: usize) {
         if shrk_to > (*self).len && shrk_to < (*self).capacity {
@@ -107,30 +113,36 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub fn as_ptr(self: &Self) -> *const u8 {
-        (*self).list[0].as_ptr()
+        (*self).list.as_ptr() as *const u8
     }
 
+    
     #[inline]
     pub fn as_mut_ptr(self: &mut Self) -> *mut u8 {
-        (*self).list[0].as_mut_ptr()
+        (*self).list.as_mut_ptr() as *mut u8
     }
 
+    
     pub fn to_string(self: &Self) -> String {
         let len: usize = (*self).len;
-        let ptr: *const u8 = (*self).list[0].as_ptr();
+        let ptr: *const u8 = (*self).list.as_ptr() as *const u8;
         let mut string: String = String::with_capacity(len);
+        unsafe {
+            string.as_mut_vec().set_len(len);
+        }
         let string_ptr: *mut u8 = string.as_mut_ptr();
         unsafe {
             for x in 0..len {
                 *string_ptr.add(x) = *ptr.add(x);
             }
-            string.as_mut_vec().set_len(len);
         }
         string
     }
 
+    
     pub fn replace_range<R>(self: &mut Self, range: R, slice: &str)
     where
         R: RangeBounds<usize>,
@@ -212,11 +224,13 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub fn len(self: &Self) -> usize {
         (*self).len
     }
 
+    
     pub fn pop(self: &mut Self) -> Option<char> {
         let len: usize = (*self).len;
         if len > 0 {
@@ -247,6 +261,7 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     pub fn remove(self: &mut Self, mut idx: usize) -> char {
         let mut len: usize = (*self).len;
         let list: &mut [u8] =
@@ -277,11 +292,13 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub fn clear(self: &mut Self) {
         (*self).len = 0;
     }
 
+    
     #[inline]
     pub fn truncate(self: &mut Self, t_cate: usize) {
         if t_cate <= (*self).len {
@@ -289,6 +306,7 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     pub fn push(self: &mut Self, ch: char) -> Result<(), yError> {
         let mut bind: [u8; 4] = [0, 0, 0, 0];
         let bytes: &[u8] = ch.encode_utf8(&mut bind).as_bytes();
@@ -307,6 +325,7 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     pub fn from_utf8(vector: Vec<u8>) -> Result<Self, yError> {
         if str::from_utf8(&vector).is_ok() {
             let mut inst: Self = Self::with_capacity();
@@ -324,16 +343,19 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub unsafe fn set_len(self: &mut Self, len: usize) {
         (*self).len = len;
     }
 
+    
     #[inline]
     pub unsafe fn set_cap(self: &mut Self, cap: usize) {
         (*self).capacity = cap;
     }
 
+    
     pub unsafe fn from_utf8_unchecked(vector: Vec<u8>) -> Self {
         let mut inst: Self = Self::with_capacity();
         for x in vector {
@@ -343,12 +365,13 @@ impl<const N: usize> Yangon<N> {
         inst
     }
 
+    
     pub fn from_utf8_lossy<'b>(list_ref: &'b [u8]) -> yCow<'b, Self> {
         if str::from_utf8(list_ref).is_ok() {
             yCow::Borrowed(unsafe { from_utf8_unchecked(list_ref) })
         } else {
             let mut inst: Self = Self::with_capacity();
-            let ptr: *mut u8 = inst.list[0].as_mut_ptr();
+            let ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
             let len: usize = list_ref.len();
             let mut srt_idx: usize = 0;
             let mut idx: usize = 0;
@@ -402,11 +425,13 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub fn is_empty(self: &Self) -> bool {
         (*self).len == 0
     }
 
+    
     pub fn insert(self: &mut Self, mut idx: usize, ch: char) {
         let len: usize = (*self).len;
         let mut bind: [u8; 4] = [0, 0, 0, 0];
@@ -417,13 +442,13 @@ impl<const N: usize> Yangon<N> {
         } else if len + byt_len > (*self).capacity {
             panic!("Capacity Overflow.")
         } else {
-            let ptr: *mut u8 = (*self).list[0].as_mut_ptr();
+            let ptr: *mut u8 = (*self).list.as_mut_ptr() as *mut u8;
             let jumps: usize = len - idx;
             let mut lst_idx: usize = len - 1 + byt_len;
-            let mut edg_idx: usize = len - 1;
+            let mut edg_idx: isize = (len - 1) as isize;
             for _ in 0..jumps {
                 unsafe {
-                    *ptr.add(lst_idx) = *ptr.add(edg_idx);
+                    *ptr.add(lst_idx) = *ptr.offset(edg_idx);
                 }
                 lst_idx -= 1;
                 edg_idx -= 1;
@@ -438,6 +463,7 @@ impl<const N: usize> Yangon<N> {
         (*self).len += byt_len;
     }
 
+    
     pub fn retain<F>(self: &mut Self, mut closure: F)
     where
         F: FnMut(char) -> bool,
@@ -493,6 +519,7 @@ impl<const N: usize> Yangon<N> {
         (*self).len = reality;
     }
 
+    
     pub fn split_off(self: &mut Self, spl_off: usize) -> Self {
         let list: &mut [u8] = unsafe {
             &mut *transmute::<(*mut MaybeUninit<u8>, usize), *mut [u8]>((
@@ -515,6 +542,7 @@ impl<const N: usize> Yangon<N> {
         inst
     }
 
+    
     #[inline]
     pub fn as_str(self: &Self) -> &str {
         unsafe {
@@ -524,11 +552,12 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     pub fn into_bytes(self: &Self) -> Vec<u8> {
         let len: usize = (*self).len;
         let mut list: Vec<u8> = Vec::with_capacity(len);
         let vec_ptr: *mut u8 = list.as_mut_ptr();
-        let ptr: *const u8 = (*self).list[0].as_ptr();
+        let ptr: *const u8 = (*self).list.as_ptr() as *const u8;
         let mut idx: usize = 0;
         unsafe {
             for _ in 0..len {
@@ -540,6 +569,7 @@ impl<const N: usize> Yangon<N> {
         list
     }
 
+    
     pub fn replace_it(self: &Self, slice: &str, upg: &str) -> Self {
         let upg_byt: &[u8] = upg.as_bytes();
         let upg_len: usize = upg_byt.len();
@@ -549,8 +579,8 @@ impl<const N: usize> Yangon<N> {
             return (*self).clone();
         }
         let mut inst: Yangon<N> = Self::with_capacity();
-        let ist_ptr: *mut u8 = inst.list[0].as_mut_ptr();
-        let ptr: *const u8 = (*self).list[0].as_ptr();
+        let ist_ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
+        let ptr: *const u8 = (*self).list.as_ptr() as *const u8;
         let len: usize = (*self).len;
         let mut ist_idx: usize = 0;
         let mut idx: usize = 0;
@@ -637,6 +667,7 @@ impl<const N: usize> Yangon<N> {
         inst
     }
 
+    
     pub fn replace<'y, G: yGeneric<'y, C>, const C: usize>(self: &Self, pre: G, upg: &str) -> Self {
         match pre.iden() {
             yPattern::Slice(slice) => (*self).replace_it(slice, upg),
@@ -666,7 +697,7 @@ impl<const N: usize> Yangon<N> {
                 let list: &[u8] = unsafe { from_raw_parts((*self).as_ptr(), len) };
                 let mut srt_idx: usize = 0;
                 let mut end_idx: usize = 1;
-                let ist_ptr: *mut u8 = inst.list[0].as_mut_ptr();
+                let ist_ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
                 let mut ist_idx: usize = 0;
                 loop {
                     if end_idx > len {
@@ -703,54 +734,29 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+    
     #[inline]
     pub unsafe fn list(self: &mut Self) -> &mut [MaybeUninit<u8>] {
         &mut (*self).list
     }
 
+    
     pub fn trim(self: &Self) -> &str {
-        let len: usize = (*self).len;
-        if len == 0 {
-            return "";
+        unsafe {
+            from_utf8_unchecked(
+                &*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>((
+                    (*self).list.as_ptr(),
+                    (*self).len,
+                ))
+            ).trim()
         }
-        let list: &[u8] = unsafe {
-            &*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>((
-                (*self).list.as_ptr(),
-                len,
-            ))
-        };
-        let mut exist: bool = false;
-        for &x in list {
-            if x != 32 {
-                exist = true;
-            }
-        }
-        if !exist {
-            return "";
-        }
-        let mut srt_idx: usize = 0;
-        let mut end_idx: usize = len - 1;
-        loop {
-            if srt_idx >= len || (*list)[srt_idx] != 32 {
-                break;
-            } else {
-                srt_idx += 1;
-            }
-        }
-        loop {
-            if end_idx == 0 || (*list)[end_idx] != 32 {
-                break;
-            } else {
-                end_idx -= 1;
-            }
-        }
-        unsafe { from_utf8_unchecked(&(*list)[srt_idx..end_idx + 1]) }
     }
 
+    
     pub fn from(slice: &str) -> Self {
         let mut inst: Self = Self::with_capacity();
         let mut idx: usize = 0;
-        let ptr: *mut u8 = inst.list[0].as_mut_ptr();
+        let ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
         for &x in slice.as_bytes() {
             unsafe {
                 *ptr.add(idx) = x;
@@ -761,6 +767,7 @@ impl<const N: usize> Yangon<N> {
         inst
     }
 
+    
     #[inline]
     pub fn new() -> Self {
         Self::with_capacity()
@@ -790,6 +797,7 @@ macro_rules! yangon {
     }};
 }
 
+
 impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -798,6 +806,7 @@ impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
         yPattern::Closure(*self)
     }
 }
+
 
 impl<'y, const C: usize> yGeneric<'y, C> for &'y [char; C] {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
@@ -808,6 +817,7 @@ impl<'y, const C: usize> yGeneric<'y, C> for &'y [char; C] {
     }
 }
 
+
 impl<'y, const C: usize> yGeneric<'y, C> for char {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -816,6 +826,7 @@ impl<'y, const C: usize> yGeneric<'y, C> for char {
         yPattern::Char(*self)
     }
 }
+
 
 impl<'y, const C: usize> yGeneric<'y, C> for &'y str {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
@@ -826,12 +837,13 @@ impl<'y, const C: usize> yGeneric<'y, C> for &'y str {
     }
 }
 
+
 impl<const N: usize> FromIterator<char> for Yangon<N> {
     fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> Self {
         let mut inst: Self = Self::with_capacity();
         let mut idx: usize = 0;
         let mut bind: [u8; 4] = [0, 0, 0, 0];
-        let ptr: *mut u8 = inst.list[0].as_mut_ptr();
+        let ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
         for x in iter {
             for &y in x.encode_utf8(&mut bind).as_bytes() {
                 unsafe {
@@ -849,7 +861,7 @@ impl yTrait for &str {
     type Ygn = Yangon;
     fn to_yangon(self: &Self) -> Self::Ygn {
         let mut inst: Yangon = Yangon::with_capacity();
-        let ptr: *mut u8 = inst.list[0].as_mut_ptr();
+        let ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
         if (*self).len() > 10240 {
             let slc_ptr: *const u8 = (*self).as_ptr();
             for x in 0..10240 {
@@ -878,7 +890,8 @@ impl<const N: usize> Write for Yangon<N> {
         if slice.len() + len > (*self).capacity {
             Err(FmtError)
         } else {
-            let ptr: *mut u8 = (*self).list[len].as_mut_ptr();
+            let pro_ptr: *mut u8 = (*self).list.as_mut_ptr() as *mut u8;
+            let ptr: *mut u8 = unsafe { pro_ptr.add(len) };
             let mut idx: usize = 0;
             for &x in slice.as_bytes() {
                 unsafe {
@@ -968,7 +981,6 @@ impl Display for yError {
         write!(f, "Error")
     }
 }
-
 
 
 
