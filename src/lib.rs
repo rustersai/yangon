@@ -4,13 +4,14 @@ use std::{
     slice::from_raw_parts,
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult, Write},
     mem::{MaybeUninit, transmute},
-    ops::Deref,
+    ops::{Deref, DerefMut},
     ops::{Bound, RangeBounds},
     result::Result,
-    str::{self, from_utf8_unchecked},
+    str::{self, from_utf8_unchecked, from_utf8_unchecked_mut},
 };
 
 
+#[allow(non_camel_case_types)]
 pub trait yGeneric<'y, const C: usize> {
     fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
     where
@@ -18,12 +19,14 @@ pub trait yGeneric<'y, const C: usize> {
 }
 
 
+#[allow(non_camel_case_types)]
 pub trait yTrait {
     type Ygn;
     fn to_yangon(self: &Self) -> Self::Ygn;
 }
 
 
+#[allow(non_camel_case_types)]
 pub enum yPattern<'y, const C: usize> {
     Slice(&'y str),
     Char(char),
@@ -32,12 +35,14 @@ pub enum yPattern<'y, const C: usize> {
 }
 
 
+#[allow(non_camel_case_types)]
 pub enum yError {
     FromUtf8Error,
     CapacityOverflow,
 }
 
 
+#[allow(non_camel_case_types)]
 pub enum yCow<'c, X> {
     Borrowed(&'c str),
     Owned(X),
@@ -53,6 +58,7 @@ pub struct Yangon<const N: usize = 10240> {
 
 
 
+#[allow(warnings)]
 impl<const N: usize> Yangon<N> {
     
     pub fn push_str(self: &mut Self, slice: &str) -> Result<(), yError> {
@@ -552,6 +558,13 @@ impl<const N: usize> Yangon<N> {
         }
     }
 
+
+    pub fn as_bytes(self: &Self) -> &[u8] {
+        unsafe {
+            &*transmute::<(*const u8, usize), *const [u8]>(((*self).as_ptr(), (*self).len))
+        }
+    }
+
     
     pub fn into_bytes(self: &Self) -> Vec<u8> {
         let len: usize = (*self).len;
@@ -931,6 +944,16 @@ impl<const N: usize> Deref for Yangon<N> {
         unsafe {
             from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
                 ((*self).list.as_ptr(), (*self).len),
+            ))
+        }
+    }
+}
+
+impl<const N: usize> DerefMut for Yangon<N> {
+    fn deref_mut(self: &mut Self) -> &mut Self::Target {
+        unsafe {
+            from_utf8_unchecked_mut(&mut *transmute::<(*mut MaybeUninit<u8>, usize), *mut [u8]>(
+                ((*self).list.as_mut_ptr(), (*self).len),
             ))
         }
     }
