@@ -1,6 +1,6 @@
 [package]
 name = "yangon"
-version = "1.1.1"
+version = "1.1.4"
 edition = "2021"
 authors = ["ruster sai <rustersai@gmail.com>"]
 description = "A high-performance, stack-allocated string type for Rust with fixed capacity and zero heap allocations"
