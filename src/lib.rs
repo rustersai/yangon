@@ -1,9 +1,9 @@
 use std::{
     cmp::PartialEq,
     convert::AsRef,
-    slice::from_raw_parts,
+    slice::{from_raw_parts, from_raw_parts_mut},
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult, Write},
-    mem::{MaybeUninit, transmute},
+    mem::MaybeUninit,
     ops::{Deref, DerefMut},
     ops::{Bound, RangeBounds},
     result::Result,
@@ -187,7 +187,7 @@ impl<const N: usize> Yangon<N> {
             while watch < times_to_loop {
                 unsafe {
                     for x in 0..list_len {
-                        if transmute::<MaybeUninit<u8>, u8>((*list)[x]) == 0 {
+                        if *(*list)[x].as_ptr() == 0 {
                             (*list)[x] = (*list)[x + 1];
                             *(*list)[x + 1].as_mut_ptr() = 0;
                         }
@@ -206,12 +206,12 @@ impl<const N: usize> Yangon<N> {
             }
             loop {
                 unsafe {
-                    if transmute::<MaybeUninit<u8>, u8>((*list)[end_idx]) == 0 {
+                    if *(*list)[end_idx].as_ptr() == 0 {
                         break;
                     } else {
                         for x in 0..list_len {
                             unsafe {
-                                if transmute::<MaybeUninit<u8>, u8>((*list)[x]) == 0 {
+                                if *(*list)[x].as_ptr() == 0 {
                                     (*list)[x] = (*list)[x - 1];
                                     *(*list)[x - 1].as_mut_ptr() = 0;
                                 }
@@ -241,10 +241,7 @@ impl<const N: usize> Yangon<N> {
         let len: usize = (*self).len;
         if len > 0 {
             let list: &[u8] = unsafe {
-                &*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>((
-                    (*self).list.as_ptr(),
-                    len,
-                ))
+                from_raw_parts((*self).as_ptr(), len)
             };
             let mut end_idx: usize = len - 1;
             loop {
@@ -271,7 +268,7 @@ impl<const N: usize> Yangon<N> {
     pub fn remove(self: &mut Self, mut idx: usize) -> char {
         let mut len: usize = (*self).len;
         let list: &mut [u8] =
-            unsafe { &mut *transmute::<(*mut u8, usize), *mut [u8]>(((*self).as_mut_ptr(), len)) };
+            unsafe { from_raw_parts_mut((*self).as_mut_ptr(), len) };
         let mut end_idx: usize = idx + 1;
         loop {
             if end_idx > len {
@@ -476,7 +473,7 @@ impl<const N: usize> Yangon<N> {
     {
         let mut list_len: usize = (*self).len;
         let list: &mut [u8] = unsafe {
-            &mut *transmute::<(*mut u8, usize), *mut [u8]>(((*self).as_mut_ptr(), list_len))
+            from_raw_parts_mut((*self).as_mut_ptr(), list_len)
         };
         let mut srt_idx: usize = 0;
         let mut end_idx: usize = 1;
@@ -528,10 +525,7 @@ impl<const N: usize> Yangon<N> {
     
     pub fn split_off(self: &mut Self, spl_off: usize) -> Self {
         let list: &mut [u8] = unsafe {
-            &mut *transmute::<(*mut MaybeUninit<u8>, usize), *mut [u8]>((
-                (*self).list.as_mut_ptr(),
-                (*self).len,
-            ))
+            from_raw_parts_mut((*self).as_mut_ptr(), (*self).len)
         };
         let len_cap: usize = (*list)[spl_off..].len();
         let mut idx: usize = 0;
@@ -552,16 +546,16 @@ impl<const N: usize> Yangon<N> {
     #[inline]
     pub fn as_str(self: &Self) -> &str {
         unsafe {
-            from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
-                ((*self).list.as_ptr(), (*self).len),
-            ))
+            from_utf8_unchecked(
+                from_raw_parts((*self).as_ptr(), (*self).len)
+            )
         }
     }
 
 
     pub fn as_bytes(self: &Self) -> &[u8] {
         unsafe {
-            &*transmute::<(*const u8, usize), *const [u8]>(((*self).as_ptr(), (*self).len))
+            from_raw_parts((*self).as_ptr(), (*self).len)
         }
     }
 
@@ -569,6 +563,9 @@ impl<const N: usize> Yangon<N> {
     pub fn into_bytes(self: &Self) -> Vec<u8> {
         let len: usize = (*self).len;
         let mut list: Vec<u8> = Vec::with_capacity(len);
+        unsafe {
+            list.set_len(len);
+        }
         let vec_ptr: *mut u8 = list.as_mut_ptr();
         let ptr: *const u8 = (*self).list.as_ptr() as *const u8;
         let mut idx: usize = 0;
@@ -577,7 +574,6 @@ impl<const N: usize> Yangon<N> {
                 *vec_ptr.add(idx) = *ptr.add(idx);
                 idx += 1;
             }
-            list.set_len(len);
         }
         list
     }
@@ -599,7 +595,7 @@ impl<const N: usize> Yangon<N> {
         let mut idx: usize = 0;
         if byt_len == 0 && upg_len != 0 {
             let mut end_idx: usize = 1;
-            let list: &[u8] = unsafe { &*transmute::<(*const u8, usize), *const [u8]>((ptr, len)) };
+            let list: &[u8] = unsafe { from_raw_parts(ptr, len) };
             for &x in upg_byt {
                 unsafe {
                     *ist_ptr.add(ist_idx) = x;
@@ -757,10 +753,7 @@ impl<const N: usize> Yangon<N> {
     pub fn trim(self: &Self) -> &str {
         unsafe {
             from_utf8_unchecked(
-                &*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>((
-                    (*self).list.as_ptr(),
-                    (*self).len,
-                ))
+                from_raw_parts((*self).as_ptr(), (*self).len)
             ).trim()
         }
     }
@@ -921,8 +914,8 @@ impl<const N: usize> Write for Yangon<N> {
 impl<const N: usize> PartialEq<&str> for Yangon<N> {
     fn eq(self: &Self, slice: &&str) -> bool {
         unsafe {
-            from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
-                ((*self).list.as_ptr(), (*self).len),
+            from_utf8_unchecked(from_raw_parts(
+                (*self).as_ptr(), (*self).len
             )) == *slice
         }
     }
@@ -931,8 +924,8 @@ impl<const N: usize> PartialEq<&str> for Yangon<N> {
 impl<const N: usize> AsRef<str> for Yangon<N> {
     fn as_ref(self: &Self) -> &str {
         unsafe {
-            from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
-                ((*self).list.as_ptr(), (*self).len),
+            from_utf8_unchecked(from_raw_parts(
+                (*self).as_ptr(), (*self).len
             ))
         }
     }
@@ -942,8 +935,8 @@ impl<const N: usize> Deref for Yangon<N> {
     type Target = str;
     fn deref(self: &Self) -> &Self::Target {
         unsafe {
-            from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
-                ((*self).list.as_ptr(), (*self).len),
+            from_utf8_unchecked(from_raw_parts(
+                (*self).as_ptr(), (*self).len
             ))
         }
     }
@@ -952,8 +945,8 @@ impl<const N: usize> Deref for Yangon<N> {
 impl<const N: usize> DerefMut for Yangon<N> {
     fn deref_mut(self: &mut Self) -> &mut Self::Target {
         unsafe {
-            from_utf8_unchecked_mut(&mut *transmute::<(*mut MaybeUninit<u8>, usize), *mut [u8]>(
-                ((*self).list.as_mut_ptr(), (*self).len),
+            from_utf8_unchecked_mut(from_raw_parts_mut(
+                (*self).as_mut_ptr(), (*self).len
             ))
         }
     }
@@ -965,8 +958,8 @@ impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
         match self {
             yCow::Borrowed(slice) => slice,
             yCow::Owned(y) => unsafe {
-                from_utf8_unchecked(&*transmute::<(*const MaybeUninit<u8>, usize), *const [u8]>(
-                    (y.list.as_ptr(), y.len),
+                from_utf8_unchecked(from_raw_parts(
+                    y.as_ptr(), y.len
                 ))
             },
         }
@@ -976,8 +969,8 @@ impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
 impl<const N: usize> Display for Yangon<N> {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", unsafe {
-            from_utf8_unchecked(transmute::<&[MaybeUninit<u8>], &[u8]>(
-                &(*self).list[..(*self).len],
+            from_utf8_unchecked(from_raw_parts(
+                (*self).as_ptr(), (*self).len
             ))
         })
     }
@@ -986,8 +979,8 @@ impl<const N: usize> Display for Yangon<N> {
 impl<const N: usize> Debug for Yangon<N> {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", unsafe {
-            from_utf8_unchecked(transmute::<&[MaybeUninit<u8>], &[u8]>(
-                &(*self).list[..(*self).len],
+            from_utf8_unchecked(from_raw_parts(
+                (*self).as_ptr(), (*self).len
             ))
         })
     }
