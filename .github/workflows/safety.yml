@@ -105,12 +105,13 @@ jobs:
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz --locked
 
-      - name: Verify fuzz target exists
+      - name: Initialize cargo-fuzz structures
         run: |
-          test -f fuzz/Cargo.toml || {
-            echo "Missing fuzz/Cargo.toml. Initialize cargo-fuzz first."
-            exit 1
-          }
+          if [ ! -f fuzz/Cargo.toml ]; then
+            cargo fuzz init
+            cargo fuzz add yangon_bytes
+          fi
 
       - name: Run fuzz target
         run: cargo fuzz run yangon_bytes -- -max_total_time=60
+
