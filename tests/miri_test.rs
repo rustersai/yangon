@@ -80,7 +80,7 @@ fn test_malformed_utf8_boundaries() {
     for test_str in test_cases {
         let mut y = Yangon::<1024>::from(test_str);
         for _ in 0..10 {
-            if y.len() > 0 {
+            if !y.is_empty() {
                 y.pop();
             }
             y.push('X').unwrap();
@@ -137,7 +137,6 @@ fn test_capacity_shrink_grow_cycles() {
             y.push('a').ok();
         }
         y.shrink_to_fit();
-        let small_cap = y.capacity();
         y.truncate(y.len() / 2);
         unsafe { y.set_cap(8192); }
         assert!(std::str::from_utf8(y.as_str().as_bytes()).is_ok());
@@ -158,7 +157,7 @@ fn test_random_operation_sequence() {
             "push_str" => { y.push_str("test").ok(); }
             "pop" => { y.pop(); }
             "remove" => {
-                if y.len() > 0 {
+                if !y.is_empty() {
                     y.remove(0);
                 }
             }
@@ -169,7 +168,7 @@ fn test_random_operation_sequence() {
             }
             "clear" => { y.clear(); }
             "truncate" => {
-                if y.len() > 0 {
+                if !y.is_empty() {
                     y.truncate(y.len() / 2);
                 }
             }
@@ -190,7 +189,7 @@ fn test_adversarial_insert_remove_pattern() {
         if y.capacity() > y.len() {
             y.insert(pos, 'X');
         }
-        if y.len() > 0 && pos < y.len() {
+        if !y.is_empty() && pos < y.len() {
             y.remove(pos);
         }
     }
@@ -204,7 +203,7 @@ fn test_every_operation_interleaved() {
             0 => { y.push('a').ok(); }
             1 => { y.push_str("bc").ok(); }
             2 => { y.pop(); }
-            3 => if y.len() > 0 { y.remove(0); }
+            3 => if !y.is_empty() { y.remove(0); }
             4 => if y.capacity() > y.len() { y.insert(0, 'X'); }
             5 => { y.truncate(y.len().saturating_sub(1)); }
             6 => { y.retain(|c| c != 'a'); }
@@ -332,7 +331,7 @@ fn test_split_off_all_positions_with_unicode() {
 }
 #[test]
 fn test_split_off_cascading() {
-    let mut y = Yangon::<1024>::from("ABCDEFGHIJ");
+    let y = Yangon::<1024>::from("ABCDEFGHIJ");
     let mut parts = vec![y.clone()];
     while parts.last().unwrap().len() > 1 {
         let mut last = parts.pop().unwrap();
@@ -407,7 +406,7 @@ fn test_all_whitespace_types() {
 #[test]
 fn test_maximum_multibyte_sequence() {
     let mut y = Yangon::<2048>::with_capacity();
-    for i in 0..100 {
+    for _ in 0..100 {
         if y.push('🦀').is_err() {
             break;
         }
@@ -448,7 +447,7 @@ fn test_clone_deep_stress() {
 #[test]
 fn test_iterator_exhaustion() {
     let chars: Vec<char> = (0..100)
-        .filter_map(|i| char::from_u32(i))
+        .filter_map(char::from_u32)
         .collect();
     let y: Result<Yangon<65536>, yError> = chars.into_iter()
         .try_fold(Yangon::<65536>::with_capacity(), |mut acc, ch| {
@@ -457,22 +456,22 @@ fn test_iterator_exhaustion() {
             Ok(acc)
         });
     if let Ok(y) = y {
-        assert!(y.len() > 0);
+        assert!(!y.is_empty());
     }
 }
 #[test]
 fn test_all_operation_pairs() {
     let mut y = Yangon::<2048>::from("initial");
     let ops = ["push", "pop", "insert", "remove", "clear"];
-    for (i, op1) in ops.iter().enumerate() {
-        for (j, op2) in ops.iter().enumerate() {
+    for (_, op1) in ops.iter().enumerate() {
+        for (_, op2) in ops.iter().enumerate() {
             y.clear();
             y.push_str("test").ok();
             match *op1 {
                 "push" => { y.push('A').ok(); }
                 "pop" => { y.pop(); }
                 "insert" => if y.capacity() > y.len() { y.insert(0, 'B'); }
-                "remove" => if y.len() > 0 { y.remove(0); }
+                "remove" => if !y.is_empty() { y.remove(0); }
                 "clear" => { y.clear(); y.push_str("x").ok(); }
                 _ => {}
             }
@@ -480,7 +479,7 @@ fn test_all_operation_pairs() {
                 "push" => { y.push('C').ok(); }
                 "pop" => { y.pop(); }
                 "insert" => if y.capacity() > y.len() { y.insert(0, 'D'); }
-                "remove" => if y.len() > 0 { y.remove(0); }
+                "remove" => if !y.is_empty() { y.remove(0); }
                 "clear" => { y.clear(); }
                 _ => {}
             }
@@ -494,7 +493,7 @@ fn test_exhaustive_capacity_boundaries() {
         let mut y = Yangon::<256>::with_capacity();
         unsafe { y.set_cap(cap); }
         let mut filled = 0;
-        for i in 0..cap {
+        for _ in 0..cap {
             if y.push('x').is_ok() {
                 filled += 1;
             } else {
@@ -513,7 +512,7 @@ fn test_alternating_insert_remove_every_position() {
         if y.capacity() > y.len() {
             y.insert(pos, 'X');
         }
-        if y.len() > 0 && pos < y.len() {
+        if !y.is_empty() && pos < y.len() {
             y.remove(pos);
         }
     }
@@ -525,7 +524,7 @@ fn test_thrashing_front_and_back() {
     for _ in 0..500 {
         y.push('A').ok();
         y.push('B').ok();
-        if y.len() > 0 {
+        if !y.is_empty() {
             y.remove(0);
         }
         if y.capacity() > y.len() {
@@ -556,7 +555,7 @@ fn test_butterfly_pattern_insertions() {
 #[test]
 fn test_sawtooth_growth_pattern() {
     let mut y = Yangon::<4096>::with_capacity();
-    for cycle in 0..50 {
+    for _ in 0..50 {
         for _ in 0..20 {
             y.push('G').ok();
         }
@@ -601,7 +600,7 @@ fn test_crafted_unicode_sequences() {
         let mut y = Yangon::<1024>::from(input);
         y.push('!').ok();
         y.pop();
-        if y.len() > 0 {
+        if !y.is_empty() {
             y.remove(0);
         }
         y.truncate(y.len());
@@ -664,7 +663,7 @@ fn test_from_utf8_lossy_comprehensive() {
     for bytes in invalid_sequences {
         let cow = Yangon::<1024>::from_utf8_lossy(&bytes);
         assert!(std::str::from_utf8(cow.as_bytes()).is_ok());
-        assert!(cow.len() > 0 || bytes.is_empty());
+        assert!(!cow.is_empty() || bytes.is_empty());
     }
 }
 #[test]
@@ -683,20 +682,20 @@ fn test_write_trait_comprehensive() {
     use std::fmt::Write;
     let mut y = Yangon::<4096>::with_capacity();
     write!(&mut y, "{}", 42).unwrap();
-    write!(&mut y, " {}", 3.14159).unwrap();
-    write!(&mut y, " {}", true).unwrap();
+    write!(&mut y, " {}", std::f64::consts::PI).unwrap();
+    write!(&mut y, true).unwrap();
     write!(&mut y, " {:?}", "debug").unwrap();
     write!(&mut y, " {:#x}", 255).unwrap();
-    assert!(y.len() > 0);
+    assert!(!y.is_empty());
     assert!(std::str::from_utf8(y.as_str().as_bytes()).is_ok());
 }
 #[test]
 fn test_write_trait_with_unicode() {
     use std::fmt::Write;
     let mut y = Yangon::<2048>::with_capacity();
-    write!(&mut y, "Rust: {}", '🦀').unwrap();
-    write!(&mut y, " World: {}", '世').unwrap();
-    write!(&mut y, " Emoji: {}", '😀').unwrap();
+    write!(&mut y, "Rust: 🦀").unwrap();
+    write!(&mut y, " World: 世").unwrap();
+    write!(&mut y, " Emoji: 😀").unwrap();
     assert!(y.as_str().contains('🦀'));
     assert!(y.as_str().contains('世'));
 }
@@ -705,7 +704,7 @@ fn test_write_trait_near_capacity() {
     use std::fmt::Write;
     let mut y = Yangon::<100>::with_capacity();
     y.push_str(&"a".repeat(90)).unwrap();
-    let result = write!(&mut y, "{}", "This is a long string");
+    let _ = write!(&mut y, "This is a long string");
 }
 #[test]
 fn test_equality_with_various_types() {
@@ -782,7 +781,6 @@ fn test_alignment_after_operations() {
 #[test]
 fn test_size_and_layout_consistency() {
     let y1 = Yangon::<1024>::with_capacity();
-    let y2 = Yangon::<2048>::with_capacity();
     let y3 = Yangon::<1024>::with_capacity();
     assert_eq!(
         std::mem::size_of_val(&y1),
@@ -894,7 +892,7 @@ fn test_capacity_off_by_one_scenarios() {
         let mut y = Yangon::<1024>::with_capacity();
         unsafe { y.set_cap(cap); }
         let s = "a".repeat(cap);
-        assert_eq!(y.push_str(&s).is_ok(), true);
+        assert!(y.push_str(&s).is_ok());
         let mut y2 = Yangon::<1024>::with_capacity();
         unsafe { y2.set_cap(cap); }
         let s2 = "a".repeat(cap + 1);
@@ -1646,7 +1644,7 @@ fn test_clone() {
 fn test_write_trait() {
     use std::fmt::Write;
     let mut y = Yangon::<1024>::with_capacity();
-    write!(&mut y, "Hello {}", "World").unwrap();
+    write!(&mut y, "Hello World").unwrap();
     assert_eq!(y.as_str(), "Hello World");
 }
 #[test]
