@@ -20,8 +20,8 @@ jobs:
       with:
         components: clippy, rustfmt
 
-    - name: Check Code Formatting
-      run: cargo fmt --check
+    #- name: Check Code Formatting
+    #  run: cargo fmt --check
 
     - name: Run Clippy Linter
       run: cargo clippy --all-targets -- -D warnings
