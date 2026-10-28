@@ -1,58 +1,116 @@
-name: Safety Verification
+
+name: Rust Reliability and Safety
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+# Read-only permissions by default.
+permissions:
+  contents: read
+
+concurrency:
+  group: safety-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  static_analysis:
-    name: Code Quality & Security Audit
+  quality:
+    name: Formatting, Lints and Tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: clippy, rustfmt
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
-    #- name: Check Code Formatting
-    #  run: cargo fmt --check
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-    - name: Run Clippy Linter
-      run: cargo clippy --all-targets -- -D warnings
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
 
-    - name: Dependency Security Audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run tests
+        run: cargo test --all-targets
+
+      - name: Run documentation tests
+        run: cargo test --doc
+
+      - name: Build documentation
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+  dependency_audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Check known dependency vulnerabilities
+        run: cargo audit
+
+  memory_safety:
+    name: Miri Undefined Behavior Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install nightly Rust and Miri
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+
+      - name: Prepare Miri
+        run: cargo miri setup
+
+      - name: Run tests under Miri
+        run: cargo miri test
 
   formal_verification:
-    name: Kani Mathematical Proofs
+    name: Kani Formal Verification
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Run Kani Verifier
-      uses: model-checking/kani-github-action@v1
-      with:
-        args: |
-          --tests
+      - name: Run Kani
+        uses: model-checking/kani-github-action@v1
+        with:
+          args: --tests
 
-  memory_safety_miri:
-    name: Miri Interpreter Testing
+  fuzz_testing:
+    name: Continuous Fuzz Testing
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Setup Nightly Rust for Miri
-      uses: dtolnay/rust-toolchain@nightly
-      with:
-        components: miri
+      - name: Install nightly Rust
+        uses: dtolnay/rust-toolchain@nightly
 
-    - name: Run Miri Tests
-      run: cargo miri test
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Verify fuzz target exists
+        run: |
+          test -f fuzz/Cargo.toml || {
+            echo "Missing fuzz/Cargo.toml. Initialize cargo-fuzz first."
+            exit 1
+          }
+
+      - name: Run fuzz target
+        run: cargo fuzz run yangon_bytes -- -max_total_time=60
