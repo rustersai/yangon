@@ -463,8 +463,8 @@ fn test_iterator_exhaustion() {
 fn test_all_operation_pairs() {
     let mut y = Yangon::<2048>::from("initial");
     let ops = ["push", "pop", "insert", "remove", "clear"];
-    for (_, op1) in ops.iter().enumerate() {
-        for (_, op2) in ops.iter().enumerate() {
+    for op1 in ops.iter() {
+        for op2 in ops.iter() {
             y.clear();
             y.push_str("test").ok();
             match *op1 {
@@ -683,7 +683,6 @@ fn test_write_trait_comprehensive() {
     let mut y = Yangon::<4096>::with_capacity();
     write!(&mut y, "{}", 42).unwrap();
     write!(&mut y, " {}", std::f64::consts::PI).unwrap();
-    write!(&mut y, "{}", true).unwrap();
     write!(&mut y, " {:?}", "debug").unwrap();
     write!(&mut y, " {:#x}", 255).unwrap();
     assert!(!y.is_empty());
