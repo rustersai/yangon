@@ -1,5 +1,5 @@
 use std::{
-    cmp::PartialEq,
+    cmp::PartialEq, 
     convert::AsRef,
     slice::{from_raw_parts, from_raw_parts_mut},
     fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult, Write},
