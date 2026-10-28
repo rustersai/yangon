@@ -13,7 +13,7 @@ use std::{
 
 #[allow(non_camel_case_types)]
 pub trait yGeneric<'y, const C: usize> {
-    fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
+    fn iden<'b>(&'b self) -> yPattern<'y, C>
     where
         'y: 'b;
 }
@@ -22,7 +22,7 @@ pub trait yGeneric<'y, const C: usize> {
 #[allow(non_camel_case_types)]
 pub trait yTrait {
     type Ygn;
-    fn to_yangon(self: &Self) -> Self::Ygn;
+    fn to_yangon(&self) -> Self::Ygn;
 }
 
 
@@ -562,10 +562,7 @@ impl<const N: usize> Yangon<N> {
     
     pub fn into_bytes(self: &Self) -> Vec<u8> {
         let len: usize = (*self).len;
-        let mut list: Vec<u8> = Vec::with_capacity(len);
-        unsafe {
-            list.set_len(len);
-        }
+        let mut list: Vec<u8> = vec![0; len];
         let vec_ptr: *mut u8 = list.as_mut_ptr();
         let ptr: *const u8 = (*self).list.as_ptr() as *const u8;
         let mut idx: usize = 0;
@@ -805,7 +802,7 @@ macro_rules! yangon {
 
 
 impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
-    fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
+    fn iden<'b>(&'b self) -> yPattern<'y, C>
     where
         'y: 'b,
     {
@@ -815,17 +812,17 @@ impl<'y, const C: usize> yGeneric<'y, C> for fn(char) -> bool {
 
 
 impl<'y, const C: usize> yGeneric<'y, C> for &'y [char; C] {
-    fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
+    fn iden<'b>(&'b self) -> yPattern<'y, C>
     where
         'y: 'b,
     {
-        yPattern::CharSlice(*self)
+        yPattern::CharSlice(self)
     }
 }
 
 
 impl<'y, const C: usize> yGeneric<'y, C> for char {
-    fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
+    fn iden<'b>(&'b self) -> yPattern<'y, C>
     where
         'y: 'b,
     {
@@ -835,11 +832,11 @@ impl<'y, const C: usize> yGeneric<'y, C> for char {
 
 
 impl<'y, const C: usize> yGeneric<'y, C> for &'y str {
-    fn iden<'b>(self: &'b Self) -> yPattern<'y, C>
+    fn iden<'b>(&'b self) -> yPattern<'y, C>
     where
         'y: 'b,
     {
-        yPattern::Slice(*self)
+        yPattern::Slice(self)
     }
 }
 
@@ -865,7 +862,7 @@ impl<const N: usize> FromIterator<char> for Yangon<N> {
 
 impl yTrait for &str {
     type Ygn = Yangon;
-    fn to_yangon(self: &Self) -> Self::Ygn {
+    fn to_yangon(&self) -> Self::Ygn {
         let mut inst: Yangon = Yangon::with_capacity();
         let ptr: *mut u8 = inst.list.as_mut_ptr() as *mut u8;
         if (*self).len() > 10240 {
@@ -891,12 +888,12 @@ impl yTrait for &str {
 }
 
 impl<const N: usize> Write for Yangon<N> {
-    fn write_str(self: &mut Self, slice: &str) -> FmtResult {
-        let len: usize = (*self).len;
-        if slice.len() + len > (*self).capacity {
+    fn write_str(&mut self, slice: &str) -> FmtResult {
+        let len: usize = self.len;
+        if slice.len() + len > self.capacity {
             Err(FmtError)
         } else {
-            let pro_ptr: *mut u8 = (*self).list.as_mut_ptr() as *mut u8;
+            let pro_ptr: *mut u8 = self.list.as_mut_ptr() as *mut u8;
             let ptr: *mut u8 = unsafe { pro_ptr.add(len) };
             let mut idx: usize = 0;
             for &x in slice.as_bytes() {
@@ -905,27 +902,27 @@ impl<const N: usize> Write for Yangon<N> {
                     idx += 1;
                 }
             }
-            (*self).len += idx;
+            self.len += idx;
             Ok(())
         }
     }
 }
 
 impl<const N: usize> PartialEq<&str> for Yangon<N> {
-    fn eq(self: &Self, slice: &&str) -> bool {
+    fn eq(&self, slice: &&str) -> bool {
         unsafe {
             from_utf8_unchecked(from_raw_parts(
-                (*self).as_ptr(), (*self).len
+                (*self).as_ptr(), self.len
             )) == *slice
         }
     }
 }
 
 impl<const N: usize> AsRef<str> for Yangon<N> {
-    fn as_ref(self: &Self) -> &str {
+    fn as_ref(&self) -> &str {
         unsafe {
             from_utf8_unchecked(from_raw_parts(
-                (*self).as_ptr(), (*self).len
+                (*self).as_ptr(), self.len
             ))
         }
     }
@@ -933,20 +930,20 @@ impl<const N: usize> AsRef<str> for Yangon<N> {
 
 impl<const N: usize> Deref for Yangon<N> {
     type Target = str;
-    fn deref(self: &Self) -> &Self::Target {
+    fn deref(&self) -> &Self::Target {
         unsafe {
             from_utf8_unchecked(from_raw_parts(
-                (*self).as_ptr(), (*self).len
+                (*self).as_ptr(), self.len
             ))
         }
     }
 }
 
 impl<const N: usize> DerefMut for Yangon<N> {
-    fn deref_mut(self: &mut Self) -> &mut Self::Target {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             from_utf8_unchecked_mut(from_raw_parts_mut(
-                (*self).as_mut_ptr(), (*self).len
+                (*self).as_mut_ptr(), self.len
             ))
         }
     }
@@ -954,7 +951,7 @@ impl<const N: usize> DerefMut for Yangon<N> {
 
 impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
     type Target = str;
-    fn deref(self: &Self) -> &Self::Target {
+    fn deref(&self) -> &Self::Target {
         match self {
             yCow::Borrowed(slice) => slice,
             yCow::Owned(y) => unsafe {
@@ -967,33 +964,33 @@ impl<const N: usize> Deref for yCow<'_, Yangon<N>> {
 }
 
 impl<const N: usize> Display for Yangon<N> {
-    fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", unsafe {
             from_utf8_unchecked(from_raw_parts(
-                (*self).as_ptr(), (*self).len
+                (*self).as_ptr(), self.len
             ))
         })
     }
 }
 
 impl<const N: usize> Debug for Yangon<N> {
-    fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", unsafe {
             from_utf8_unchecked(from_raw_parts(
-                (*self).as_ptr(), (*self).len
+                (*self).as_ptr(), self.len
             ))
         })
     }
 }
 
 impl Debug for yError {
-    fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", "Error")
     }
 }
 
 impl Display for yError {
-    fn fmt(self: &Self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "Error")
     }
 }
